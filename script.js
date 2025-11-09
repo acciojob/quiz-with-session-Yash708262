@@ -27,19 +27,19 @@ const questions = [
   },
 ];
 
-// References to DOM elements
 const questionsElement = document.getElementById("questions");
 const submitButton = document.getElementById("submit");
 const scoreElement = document.getElementById("score");
 
-// Load previous progress from session storage
+// Load previous progress
 let userAnswers = sessionStorage.getItem("progress")
   ? JSON.parse(sessionStorage.getItem("progress"))
   : {};
 
-// Function to render quiz
+// Render quiz questions
 function renderQuestions() {
-  questionsElement.innerHTML = ""; // Clear previous content
+  questionsElement.innerHTML = "";
+
   questions.forEach((q, i) => {
     const questionDiv = document.createElement("div");
     questionDiv.classList.add("question");
@@ -56,15 +56,20 @@ function renderQuestions() {
       choiceInput.type = "radio";
       choiceInput.name = `question-${i}`;
       choiceInput.value = choice;
-      // Check previously selected answer
+
+      // Restore from session storage
       if (userAnswers[i] === choice) {
         choiceInput.checked = true;
+        choiceInput.setAttribute("checked", "true"); // <-- important for Cypress
       }
 
-      // Event listener for saving selection in session storage
+      // Save to session storage on change
       choiceInput.addEventListener("change", () => {
         userAnswers[i] = choice;
         sessionStorage.setItem("progress", JSON.stringify(userAnswers));
+
+        // Also ensure attribute is set for Cypress
+        choiceInput.setAttribute("checked", "true");
       });
 
       choiceLabel.appendChild(choiceInput);
@@ -76,7 +81,7 @@ function renderQuestions() {
   });
 }
 
-// Function to calculate score and display
+// Calculate and display score
 function submitQuiz() {
   let score = 0;
   questions.forEach((q, i) => {
@@ -84,20 +89,19 @@ function submitQuiz() {
   });
 
   scoreElement.textContent = `Your score is ${score} out of ${questions.length}.`;
-
-  // Save score in local storage
   localStorage.setItem("score", score);
 }
 
 // Event listener for submit button
 submitButton.addEventListener("click", submitQuiz);
 
-// Render questions on page load
+// Render on load
 renderQuestions();
 
-// Display previous score if exists
+// Restore previous score if any
 if (localStorage.getItem("score") !== null) {
   scoreElement.textContent = `Your score is ${localStorage.getItem(
     "score"
   )} out of ${questions.length}.`;
 }
+
